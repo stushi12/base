@@ -79,7 +79,7 @@ impl Metrics {
 
     /// No-op when the `metrics` feature is disabled.
     #[cfg(not(feature = "metrics"))]
-    pub fn init() {}
+    pub const fn init() {}
 
     #[cfg(feature = "metrics")]
     fn zero() {
@@ -128,6 +128,20 @@ impl std::fmt::Debug for ProofGuard {
 }
 
 #[cfg(feature = "metrics")]
+impl Default for ProofGuard {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(not(feature = "metrics"))]
+impl Default for ProofGuard {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(feature = "metrics")]
 impl ProofGuard {
     /// Creates a new guard. Prefer the [`proof_guard!`] macro.
     #[inline]
@@ -153,7 +167,7 @@ impl ProofGuard {
 
     /// No-op.
     #[inline]
-    pub fn set_outcome(&mut self, _outcome: &'static str) {}
+    pub const fn set_outcome(&mut self, _outcome: &'static str) {}
 }
 
 #[cfg(feature = "metrics")]
