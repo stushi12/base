@@ -95,9 +95,9 @@ where
         #[cfg(feature = "metrics")]
         {
             let batch_count = self.buffer.len() as f64;
-            base_metrics::set!(gauge, crate::metrics::Metrics::PIPELINE_BATCH_BUFFER, batch_count);
+            crate::Metrics::pipeline_batch_buffer().set(batch_count);
             let batch_size = std::mem::size_of_val(&self.buffer) as f64;
-            base_metrics::set!(gauge, crate::metrics::Metrics::PIPELINE_BATCH_MEM, batch_size);
+            crate::Metrics::pipeline_batch_mem().set(batch_size);
         }
         Ok(())
     }
@@ -158,17 +158,13 @@ where
                             &mut self.fetcher,
                         )
                         .await;
-                    base_metrics::record!(
-                        histogram,
-                        crate::metrics::Metrics::PIPELINE_CHECK_BATCH_PREFIX,
-                        start.elapsed().as_secs_f64()
-                    );
+                    #[cfg(feature = "metrics")]
+                    crate::Metrics::pipeline_check_batch_prefix()
+                        .record(start.elapsed().as_secs_f64());
 
-                    base_metrics::inc!(
-                        gauge,
-                        crate::metrics::Metrics::PIPELINE_BATCH_VALIDITY,
-                        "validity" => validity.to_string(),
-                    );
+                    #[cfg(feature = "metrics")]
+                    crate::Metrics::pipeline_batch_validity(validity.to_string())
+                        .increment(1.0);
 
                     match validity {
                         BatchValidity::Accept => self.span = Some(b),

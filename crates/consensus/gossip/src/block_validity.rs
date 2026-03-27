@@ -14,7 +14,6 @@ use base_consensus_genesis::RollupConfig;
 use libp2p::gossipsub::MessageAcceptance;
 
 use super::BlockHandler;
-#[cfg(feature = "metrics")]
 use crate::Metrics;
 
 /// Error that can occur when validating a block.
@@ -121,8 +120,7 @@ impl BlockHandler {
         let validation_start = Instant::now();
 
         // Record total validation attempts
-        #[cfg(feature = "metrics")]
-        base_metrics::inc!(counter, Metrics::BLOCK_VALIDATION_TOTAL);
+        Metrics::block_validation_total().increment(1);
 
         // Record block version distribution
         #[cfg(feature = "metrics")]
@@ -133,7 +131,7 @@ impl BlockHandler {
                 OpExecutionPayload::V3(_) => "v3",
                 OpExecutionPayload::V4(_) => "v4",
             };
-            base_metrics::inc!(counter, Metrics::BLOCK_VERSION, "version" => version);
+            Metrics::block_version(version).increment(1);
         }
 
         let validation_result = self.validate_block_internal(envelope);
@@ -142,18 +140,13 @@ impl BlockHandler {
         #[cfg(feature = "metrics")]
         {
             let duration = validation_start.elapsed();
-            base_metrics::record!(
-                histogram,
-                Metrics::BLOCK_VALIDATION_DURATION_SECONDS,
-                duration.as_secs_f64()
-            );
+            Metrics::block_validation_duration_seconds().record(duration.as_secs_f64());
         }
 
         // Record success/failure metrics
         match &validation_result {
             Ok(()) => {
-                #[cfg(feature = "metrics")]
-                base_metrics::inc!(counter, Metrics::BLOCK_VALIDATION_SUCCESS);
+                Metrics::block_validation_success().increment(1);
             }
             Err(_err) => {
                 #[cfg(feature = "metrics")]
@@ -178,7 +171,7 @@ impl BlockHandler {
                         BlockInvalidError::ExcessBlobGas => "excess_blob_gas",
                         BlockInvalidError::WithdrawalsRoot => "withdrawals_root",
                     };
-                    base_metrics::inc!(counter, Metrics::BLOCK_VALIDATION_FAILED, "reason" => reason);
+                    Metrics::block_validation_failed(reason).increment(1);
                 }
             }
         }

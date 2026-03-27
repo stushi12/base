@@ -99,12 +99,8 @@ where
                 data.push(BlobData::default());
             }
         }
-        #[cfg(feature = "metrics")]
-        metrics::gauge!(
-            crate::metrics::Metrics::PIPELINE_DATA_AVAILABILITY_PROVIDER,
-            "source" => "blobs",
-        )
-        .increment(data.len() as f64);
+        crate::Metrics::pipeline_data_availability_provider("blobs")
+            .increment(data.len() as f64);
         (data, hashes)
     }
 
