@@ -31,7 +31,7 @@ use crate::{
     driver::{
         DriverConfig, PipelineConfig, PipelineHandle, ProposerDriverControl, ProvingPipeline,
     },
-    metrics::record_startup_metrics,
+    Metrics,
     output_proposer::ProposalSubmitter,
 };
 
@@ -53,7 +53,7 @@ pub async fn run(config: ProposerConfig) -> Result<()> {
     config.metrics.init().wrap_err("failed to install Prometheus recorder")?;
 
     // Record startup metrics (no-ops if no recorder installed).
-    record_startup_metrics(env!("CARGO_PKG_VERSION"));
+    Metrics::record_startup(env!("CARGO_PKG_VERSION"));
 
     // ── 3. Create RPC clients ────────────────────────────────────────────
     let l1_config = L1ClientConfig::new(config.l1_eth_rpc.clone())
