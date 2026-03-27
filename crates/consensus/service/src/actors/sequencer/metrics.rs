@@ -3,7 +3,8 @@ use std::time::Duration;
 use base_consensus_derive::AttributesBuilder;
 
 use crate::{
-    Conductor, OriginSelector, SequencerActor, SequencerEngineClient, UnsafePayloadGossipClient,
+    Conductor, Metrics, OriginSelector, SequencerActor, SequencerEngineClient,
+    UnsafePayloadGossipClient,
 };
 
 /// `SequencerActor` metrics-related method implementations.
@@ -38,7 +39,7 @@ where
                 ("recovery", self.recovery_mode.get().to_string()),
             ];
 
-            let gauge = metrics::gauge!(crate::Metrics::SEQUENCER_STATE, &state_flags);
+            let gauge = metrics::gauge!("base_node.sequencer_state", &state_flags);
             gauge.set(1);
         }
     }
@@ -46,79 +47,61 @@ where
 
 #[inline]
 pub(super) fn update_attributes_build_duration_metrics(_duration: Duration) {
-    // Log the attributes build duration, if metrics are enabled.
-    base_metrics::set!(gauge, crate::Metrics::SEQUENCER_ATTRIBUTES_BUILDER_DURATION, _duration);
+    Metrics::sequencer_attributes_build_duration().set(_duration);
 }
 
 #[inline]
 pub(super) fn update_block_build_duration_metrics(_duration: Duration) {
-    base_metrics::set!(
-        gauge,
-        crate::Metrics::SEQUENCER_BLOCK_BUILDING_START_TASK_DURATION,
-        _duration
-    );
+    Metrics::sequencer_block_building_start_task_duration().set(_duration);
 }
 
 #[inline]
 pub(super) fn update_seal_duration_metrics(_duration: Duration) {
-    // Log the block building seal task duration, if metrics are enabled.
-    base_metrics::set!(
-        gauge,
-        crate::Metrics::SEQUENCER_BLOCK_BUILDING_SEAL_TASK_DURATION,
-        _duration
-    );
+    Metrics::sequencer_block_building_seal_task_duration().set(_duration);
 }
 
 #[inline]
 pub(super) fn update_total_transactions_sequenced(_transaction_count: u64) {
-    #[cfg(feature = "metrics")]
-    metrics::counter!(crate::Metrics::SEQUENCER_TOTAL_TRANSACTIONS_SEQUENCED)
-        .increment(_transaction_count);
+    Metrics::sequencer_total_transactions_sequenced().increment(_transaction_count);
 }
 
 #[inline]
 pub(super) fn inc_seal_step_retry(_step: &'static str) {
-    base_metrics::inc!(counter, crate::Metrics::SEQUENCER_SEAL_STEP_RETRIES_TOTAL, "step" => _step);
+    Metrics::sequencer_seal_step_retries_total(_step).increment(1);
 }
 
 #[inline]
 pub(super) fn update_seal_step_duration(_step: &'static str, _duration: Duration) {
-    base_metrics::set!(
-        gauge,
-        crate::Metrics::SEQUENCER_SEAL_STEP_DURATION,
-        "step",
-        _step,
-        _duration
-    );
+    Metrics::sequencer_seal_step_duration(_step).set(_duration);
 }
 
 #[inline]
 pub(super) fn inc_seal_error(fatal: bool) {
-    let _label = if fatal { "true" } else { "false" };
-    base_metrics::inc!(counter, crate::Metrics::SEQUENCER_SEAL_ERROR_TOTAL, "fatal" => _label);
+    let label = if fatal { "true" } else { "false" };
+    Metrics::sequencer_seal_errors_total(label).increment(1);
 }
 
 #[inline]
 pub(super) fn inc_start_rejected(_reason: &'static str) {
-    base_metrics::inc!(counter, crate::Metrics::SEQUENCER_START_REJECTED_TOTAL, "reason" => _reason);
+    Metrics::sequencer_start_rejected_total(_reason).increment(1);
 }
 
 #[inline]
 pub(super) fn inc_stop_deferred() {
-    base_metrics::inc!(counter, crate::Metrics::SEQUENCER_STOP_DEFERRED_TOTAL);
+    Metrics::sequencer_stop_deferred_total().increment(1);
 }
 
 #[inline]
 pub(super) fn inc_recovery_mode_block() {
-    base_metrics::inc!(counter, crate::Metrics::SEQUENCER_RECOVERY_MODE_BLOCKS_TOTAL);
+    Metrics::sequencer_recovery_mode_blocks_total().increment(1);
 }
 
 #[inline]
 pub(super) fn inc_drift_empty_block() {
-    base_metrics::inc!(counter, crate::Metrics::SEQUENCER_DRIFT_EMPTY_BLOCKS_TOTAL);
+    Metrics::sequencer_drift_empty_blocks_total().increment(1);
 }
 
 #[inline]
 pub(super) fn inc_stale_build_discarded() {
-    base_metrics::inc!(counter, crate::Metrics::SEQUENCER_STALE_BUILD_DISCARDED_TOTAL);
+    Metrics::sequencer_stale_build_discarded_total().increment(1);
 }

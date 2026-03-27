@@ -380,24 +380,13 @@ async fn record_call_time<T, Err>(
     f: impl Future<Output = Result<T, Err>>,
     metric_label: &'static str,
 ) -> Result<T, Err> {
-    // Await on the future and track its duration.
     let start = Instant::now();
     let result = f.await?;
 
-    // Record the call duration.
-    #[cfg(feature = "metrics")]
-    {
-        let duration = start.elapsed();
-        base_metrics::record!(
-            histogram,
-            Metrics::ENGINE_METHOD_REQUEST_DURATION,
-            "method",
-            metric_label,
-            duration.as_secs_f64()
-        );
-    }
+    Metrics::engine_method_request_duration(metric_label).record(start.elapsed().as_secs_f64());
+
     #[cfg(not(feature = "metrics"))]
-    let _ = (start, metric_label);
+    let _ = start;
 
     Ok(result)
 }
