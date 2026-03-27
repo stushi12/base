@@ -8,7 +8,7 @@ use base_consensus_genesis::{RollupConfig, SystemConfig};
 use base_protocol::BlockInfo;
 
 use crate::{
-    ActivationSignal, ChainProvider, L1RetrievalProvider, OriginAdvancer, OriginProvider,
+    ActivationSignal, ChainProvider, L1RetrievalProvider, Metrics, OriginAdvancer, OriginProvider,
     PipelineError, PipelineResult, ResetError, ResetSignal, Signal, SignalReceiver,
 };
 
@@ -62,18 +62,10 @@ impl<F: ChainProvider> PollingTraversal<F> {
     }
 
     /// Update the origin block in the traversal stage.
-    #[cfg(feature = "metrics")]
     fn update_origin(&mut self, block: BlockInfo) {
         self.done = false;
         self.block = Some(block);
-        crate::Metrics::pipeline_origin().set(block.number as f64);
-    }
-
-    /// Update the origin block in the traversal stage.
-    #[cfg(not(feature = "metrics"))]
-    const fn update_origin(&mut self, block: BlockInfo) {
-        self.done = false;
-        self.block = Some(block);
+        Metrics::pipeline_origin().set(block.number as f64);
     }
 }
 
@@ -126,7 +118,7 @@ impl<F: ChainProvider + Send> OriginAdvancer for PollingTraversal<F> {
         #[cfg(feature = "metrics")]
         {
             let duration = start_time.elapsed();
-            crate::Metrics::pipeline_origin_advance().record(duration.as_secs_f64());
+            Metrics::pipeline_origin_advance().record(duration.as_secs_f64());
         }
 
         // If the prev block is not holocene, but the next is, we need to flag this

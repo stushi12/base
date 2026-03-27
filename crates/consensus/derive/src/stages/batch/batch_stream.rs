@@ -1,6 +1,6 @@
 //! This module contains the `BatchStream` stage.
 
-use alloc::{boxed::Box, collections::VecDeque, sync::Arc};
+use alloc::{boxed::Box, collections::VecDeque, string::ToString, sync::Arc};
 use core::fmt::Debug;
 
 use async_trait::async_trait;
@@ -11,7 +11,7 @@ use base_protocol::{
 };
 
 use crate::{
-    L2ChainProvider, NextBatchProvider, OriginAdvancer, OriginProvider, PipelineError,
+    L2ChainProvider, Metrics, NextBatchProvider, OriginAdvancer, OriginProvider, PipelineError,
     PipelineResult, Signal, SignalReceiver,
 };
 
@@ -92,13 +92,10 @@ where
         if let Some(span) = self.span.take() {
             self.buffer.extend(span.get_singular_batches(l1_origins, parent)?);
         }
-        #[cfg(feature = "metrics")]
-        {
-            let batch_count = self.buffer.len() as f64;
-            crate::Metrics::pipeline_batch_buffer().set(batch_count);
-            let batch_size = std::mem::size_of_val(&self.buffer) as f64;
-            crate::Metrics::pipeline_batch_mem().set(batch_size);
-        }
+        let batch_count = self.buffer.len() as f64;
+        Metrics::pipeline_batch_buffer().set(batch_count);
+        let batch_size = core::mem::size_of_val(&self.buffer) as f64;
+        Metrics::pipeline_batch_mem().set(batch_size);
         Ok(())
     }
 }
@@ -159,12 +156,9 @@ where
                         )
                         .await;
                     #[cfg(feature = "metrics")]
-                    crate::Metrics::pipeline_check_batch_prefix()
-                        .record(start.elapsed().as_secs_f64());
+                    Metrics::pipeline_check_batch_prefix().record(start.elapsed().as_secs_f64());
 
-                    #[cfg(feature = "metrics")]
-                    crate::Metrics::pipeline_batch_validity(validity.to_string())
-                        .increment(1.0);
+                    Metrics::pipeline_batch_validity(validity.to_string()).increment(1.0);
 
                     match validity {
                         BatchValidity::Accept => self.span = Some(b),
