@@ -12,7 +12,9 @@ use base_proof_preimage::{PreimageKey, PreimageKeyType};
 use base_protocol::{BlockInfo, OutputRoot, Predeploys};
 use tracing::warn;
 
-use crate::{HostConfig, HostError, HostProviders, Metrics, Result, SharedKeyValueStore, store_ordered_trie};
+use crate::{
+    HostConfig, HostError, HostProviders, Metrics, Result, SharedKeyValueStore, store_ordered_trie,
+};
 
 /// Parses a blob hint, supporting both legacy (48-byte) and new (40-byte) formats.
 ///

@@ -26,12 +26,12 @@ use tokio_util::sync::CancellationToken;
 use tracing::{info, warn};
 
 use crate::{
+    Metrics,
     balance::balance_monitor,
     config::ProposerConfig,
     driver::{
         DriverConfig, PipelineConfig, PipelineHandle, ProposerDriverControl, ProvingPipeline,
     },
-    Metrics,
     output_proposer::ProposalSubmitter,
 };
 

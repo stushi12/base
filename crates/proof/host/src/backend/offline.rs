@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use crate::Metrics;
 use async_trait::async_trait;
 use base_proof_preimage::{
     HintRouter, PreimageFetcher, PreimageKey,
@@ -39,7 +40,7 @@ where
         let kv_store = self.inner.read().await;
         let result = kv_store.get(key.into());
         if result.is_none() {
-            crate::Metrics::offline_misses_total().increment(1);
+            Metrics::offline_misses_total().increment(1);
         }
         result.ok_or(PreimageOracleError::KeyNotFound)
     }

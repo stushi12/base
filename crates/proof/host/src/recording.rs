@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::Metrics;
 use async_trait::async_trait;
 use base_proof_preimage::{
     FlushableCache, HintWriterClient, PreimageKey, PreimageOracleClient, WitnessOracle,
@@ -50,14 +51,14 @@ where
     W: WitnessOracle,
 {
     async fn get(&self, key: PreimageKey) -> PreimageOracleResult<Vec<u8>> {
-        crate::Metrics::preimage_accesses_total().increment(1);
+        Metrics::preimage_accesses_total().increment(1);
         let value = self.oracle.get(key).await?;
         self.witness.insert_preimage(key, &value)?;
         Ok(value)
     }
 
     async fn get_exact(&self, key: PreimageKey, buf: &mut [u8]) -> PreimageOracleResult<()> {
-        crate::Metrics::preimage_accesses_total().increment(1);
+        Metrics::preimage_accesses_total().increment(1);
         self.oracle.get_exact(key, buf).await?;
         self.witness.insert_preimage(key, buf)?;
         Ok(())

@@ -1,5 +1,6 @@
 use std::{collections::HashSet, fmt, sync::Arc};
 
+use crate::Metrics;
 use async_trait::async_trait;
 use base_proof::{Hint, HintType};
 use base_proof_preimage::{
@@ -77,7 +78,7 @@ impl PreimageFetcher for OnlineHostBackend {
         drop(kv_lock);
 
         if preimage.is_none() {
-            crate::Metrics::kv_cold_lookups_total().increment(1);
+            Metrics::kv_cold_lookups_total().increment(1);
         }
 
         while preimage.is_none() {
